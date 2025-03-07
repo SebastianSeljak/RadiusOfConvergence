@@ -93,7 +93,7 @@ def bisection_method(func, solution, min_radius, max_radius, max_iter):
             break
     return np.round(midpoint, 5)
 
-def generate_random_function(trig=False, max_degree=4):
+def generate_random_polynomial(trig=False, max_degree=4):
     """
     Generates a random function as a linear combination of x, x^2, x^3, x^4, sin(x), and cos(x).
 
@@ -127,6 +127,35 @@ def generate_random_function(trig=False, max_degree=4):
     func = lambda x_val: jnp.array(sympy.lambdify(x, random_expr, 'numpy')(x_val))
     
     return func, random_expr
+
+def generate_random_trig(phase_shift=False):
+    """
+    Generates a random function as a linear combination of sin(x) and cos(x).
+
+    Returns:
+    tuple: A tuple containing the generated function and its symbolic expression.
+    """
+    # Randomly choose the coefficients for sin(x) and cos(x)
+    coefs = np.round(np.random.normal(0, 5, 4), 2)
+    beta = np.round(np.random.uniform(-2,2), 2)
+
+    phase = 0
+    if phase_shift:
+        phase = np.random.uniform(0, 2 * np.pi)
+    
+    # Create the random expression as a linear combination of sin(x) and cos(x)
+    random_expr = coefs[0] * sympy.sin(coefs[1]*x + phase) + coefs[2] * sympy.cos(coefs[3]* x) + beta
+    
+    # Convert the symbolic expression to a JAX-compatible function
+    func = lambda x_val: jnp.array(sympy.lambdify(x, random_expr, 'numpy')(x_val))
+    
+    # Compute the period of the function
+    gcd = sympy.gcd(int(coefs[1]*100), int(coefs[3]*100))
+    p = coefs[1] * 100 / gcd
+    q = coefs[3] * 100 / gcd
+    period = abs((q / coefs[1]) * 2 * np.pi)
+
+    return func, random_expr, period
 
 def analyze_function(func, expr):
     """
