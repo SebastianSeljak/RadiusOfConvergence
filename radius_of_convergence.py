@@ -220,3 +220,53 @@ def taylor_approx(func, point=0.0, order=3):
         # Add the i-th term of the Taylor series to the approximation
         approx += derivative_at_point / sympy.factorial(i) * (x - point)**i
     return approx
+
+
+def truncated_fft(function, n_terms, N=int(1e6), ds=1e-3, plot=False):
+    """
+    Truncates the FFT of the input data to the specified number of terms and
+    returns a SymPy expression for the truncated Fourier series.
+
+    Args:
+        function: The input function (a Python/NumPy/JAX function).
+        n_terms: The number of terms to keep.
+        N: The number of points in the input data.
+        ds: The spacing between points in the input data.
+        plot: Boolean, whether to plot the original and reconstructed data.
+
+    Returns:
+        Sympy expression of data
+        Reconstructed data
+    """
+    T = N * ds
+    x_np = np.linspace(-T/2, T/2, N, endpoint=False)  # NumPy array for FFT
+    x_sp = sp.Symbol('x')  # SymPy symbol for the Fourier series expression
+    data = function(x_np)  # Evaluate the function using NumPy
+    fft_result = np.fft.fft(data)
+    truncated_fft = np.zeros_like(fft_result, dtype=complex)
+
+    truncated_fft[:n_terms] = fft_result[:n_terms]
+    truncated_fft[-n_terms:] = fft_result[-n_terms:]
+
+    reconstructed_data = np.fft.ifft(truncated_fft)
+
+    f0 = 1 / T
+    a0 = 2 * fft_result[0].real / N
+    fourier_series_expr = a0 / 2
+
+    for k in range(1, n_terms + 1):
+        ak_complex = 2 * fft_result[k] / N
+        ak = ak_complex.real
+        bk = -ak_complex.imag
+        fourier_series_expr += ak * sp.cos(2 * sp.pi * k * f0 * x_sp) + bk * sp.sin(2 * sp.pi * k * f0 * x_sp)
+
+    if plot:
+        plt.plot(x_np, data, label="Original data")
+        plt.plot(x_np, reconstructed_data.real, label=f"Reconstructed data (n={n_terms})")
+        plt.legend()
+        plt.xlabel("x")
+        plt.ylabel("y")
+        plt.title("Original vs. Reconstructed Data")
+        plt.show()
+
+    return fourier_series_expr, reconstructed_data.real
