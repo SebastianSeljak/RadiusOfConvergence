@@ -3,6 +3,7 @@ import jax.numpy as jnp
 import jax
 from jax import grad
 import sympy
+import matplotlib.pyplot as plt
 
 x = sympy.Symbol('x')
 
@@ -221,7 +222,6 @@ def taylor_approx(func, point=0.0, order=3):
         approx += derivative_at_point / sympy.factorial(i) * (x - point)**i
     return approx
 
-
 def truncated_fft(function, n_terms, N=int(1e6), ds=1e-3, plot=False):
     """
     Truncates the FFT of the input data to the specified number of terms and
@@ -240,7 +240,7 @@ def truncated_fft(function, n_terms, N=int(1e6), ds=1e-3, plot=False):
     """
     T = N * ds
     x_np = np.linspace(-T/2, T/2, N, endpoint=False)  # NumPy array for FFT
-    x_sp = sp.Symbol('x')  # SymPy symbol for the Fourier series expression
+    x_sp = sympy.Symbol('x') 
     data = function(x_np)  # Evaluate the function using NumPy
     fft_result = np.fft.fft(data)
     truncated_fft = np.zeros_like(fft_result, dtype=complex)
@@ -258,7 +258,7 @@ def truncated_fft(function, n_terms, N=int(1e6), ds=1e-3, plot=False):
         ak_complex = 2 * fft_result[k] / N
         ak = ak_complex.real
         bk = -ak_complex.imag
-        fourier_series_expr += ak * sp.cos(2 * sp.pi * k * f0 * x_sp) + bk * sp.sin(2 * sp.pi * k * f0 * x_sp)
+        fourier_series_expr += ak * sympy.cos(2 * sympy.pi * k * f0 * x_sp) + bk * sympy.sin(2 * sympy.pi * k * f0 * x_sp)
 
     if plot:
         plt.plot(x_np, data, label="Original data")
