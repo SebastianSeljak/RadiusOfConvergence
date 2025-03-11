@@ -158,59 +158,6 @@ def generate_random_trig(phase_shift=False):
 
     return func, random_expr, period
 
-def generate_random_combined(trig=False, max_degree=4, phase_shift=False):
-    """
-    Generates a random function as a linear combination of polynomial terms (x^1 to x^max_degree) and 
-    trigonometric functions (sin(x), cos(x)).
-
-    Parameters:
-    trig (bool): Whether to include trigonometric functions (sin and cos) in the basis.
-    max_degree (int): The maximum degree of the polynomial terms.
-    phase_shift (bool): Whether to apply a phase shift to the sine and cosine terms.
-
-    Returns:
-    tuple: A tuple containing the generated function and its symbolic expression.
-    """
-    # degree choice
-    degree = np.random.choice(jnp.arange(max_degree), p=jnp.ones(max_degree) / max_degree)
-    
-    # polynomial basis
-    basis = [1] + [x**d for d in range(1, degree + 2)]
-    
-    # trig parts
-    if trig:
-        coefs = jnp.round(np.random.normal(0, 5, 4), 2)
-        beta = jnp.round(np.random.uniform(-2, 2), 2)
-        phase = 0
-        if phase_shift:
-            phase = np.random.uniform(0, 2 * jnp.pi)
-        
-        # Add sine and cosine terms with random coefficients
-        if np.random.rand() < 0.5:
-            basis.append(coefs[0] * sympy.sin(coefs[1] * x + phase))
-        if np.random.rand() < 0.5:
-            basis.append(coefs[2] * sympy.cos(coefs[3] * x))
-    
-    # Generate random coefficients for all the basis functions
-    coefficients = np.random.normal(0, 5, len(basis))
-    
-    # Create the random expression by summing the basis functions with their coefficients
-    random_expr = sum(c * b for c, b in zip(coefficients, basis))
-    
-    # Convert the symbolic expression to a JAX-compatible function
-    func = lambda x_val: jnp.array(sympy.lambdify(x, random_expr, 'numpy')(x_val))
-    
-    # If trigonometric terms were added, compute the period of the function
-    period = None
-    if trig:
-        # Compute the period of the sine and cosine terms
-        gcd = sympy.gcd(int(coefs[1] * 100), int(coefs[3] * 100))
-        p = coefs[1] * 100 / gcd
-        q = coefs[3] * 100 / gcd
-        period = abs((q / coefs[1]) * 2 * jnp.pi)
-    
-    return func, random_expr, period
-
 def analyze_function(func, expr):
     """
     Analyzes a function by finding its roots and determining the radius of convergence.
