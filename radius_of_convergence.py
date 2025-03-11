@@ -29,7 +29,7 @@ def converges(func, solution, x0):
     Returns:
     bool: True if Newton's method converges to the solution, False otherwise.
     """
-    return np.isclose(float(newtons_method(func, x0)), float(solution))
+    return np.round(float(newtons_method(func, x0)), 6) == np.round(float(solution), 6)
 
 def radius_of_convergence_bisection(func, solutions, max_x=100., max_iter=100):
     """
@@ -106,7 +106,7 @@ def generate_random_polynomial(trig=False, max_degree=4):
     tuple: A tuple containing the generated function and its symbolic expression.
     """
     # Randomly choose the degree of the function
-    degree = np.random.choice(np.arange(max_degree), p=np.ones(max_degree) / max_degree)
+    degree = np.random.choice(jnp.arange(max_degree), p=jnp.ones(max_degree) / max_degree)
     
     # Create the basis functions up to the chosen degree
     basis = [1] + [x**d for d in range(1, degree + 2)]
@@ -137,12 +137,12 @@ def generate_random_trig(phase_shift=False):
     tuple: A tuple containing the generated function and its symbolic expression.
     """
     # Randomly choose the coefficients for sin(x) and cos(x)
-    coefs = np.round(np.random.normal(0, 5, 4), 2)
-    beta = np.round(np.random.uniform(-2,2), 2)
+    coefs = jnp.round(np.random.normal(0, 5, 4), 2)
+    beta = jnp.round(np.random.uniform(-2,2), 2)
 
     phase = 0
     if phase_shift:
-        phase = np.random.uniform(0, 2 * np.pi)
+        phase = np.random.uniform(0, 2 * jnp.pi)
     
     # Create the random expression as a linear combination of sin(x) and cos(x)
     random_expr = coefs[0] * sympy.sin(coefs[1]*x + phase) + coefs[2] * sympy.cos(coefs[3]* x) + beta
@@ -154,7 +154,7 @@ def generate_random_trig(phase_shift=False):
     gcd = sympy.gcd(int(coefs[1]*100), int(coefs[3]*100))
     p = coefs[1] * 100 / gcd
     q = coefs[3] * 100 / gcd
-    period = abs((q / coefs[1]) * 2 * np.pi)
+    period = abs((q / coefs[1]) * 2 * jnp.pi)
 
     return func, random_expr, period
 
