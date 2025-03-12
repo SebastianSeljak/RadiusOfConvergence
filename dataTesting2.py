@@ -1,5 +1,6 @@
 import numpy as np
 import jax.numpy as jnp
+import jax.scipy as jnpscr
 import jax
 from jax import grad
 import sympy
@@ -230,7 +231,7 @@ def taylor_approx(func, point=0.0, order=3):
         # Add the i-th term of the Taylor series to the approximation
         approx += derivative_at_point / sympy.factorial(i) * (x - point) ** i
     return approx
-
+'''
 def taylor_approx_jnp(func, point=0.0, order=3):
     """
     Compute the Taylor series approximation of a function at a given point.
@@ -248,9 +249,9 @@ def taylor_approx_jnp(func, point=0.0, order=3):
         # Compute the i-th derivative at the given point
         derivative_at_point = deriv_of_order(func, i)(point)
         # Add the i-th term of the Taylor series to the approximation
-        approx += derivative_at_point / jnp.factorial(i) * jnp.power(x - point, i)
+        approx += derivative_at_point / jnpscr.factorial(i) * jnp.power(x - point, i)
     return approx
-
+'''
 
 def truncated_fft(function, n_terms, N=int(1e6), ds=1e-3, plot=False):
     """
@@ -309,73 +310,71 @@ def truncated_fft(function, n_terms, N=int(1e6), ds=1e-3, plot=False):
 def test_func1(x):
     return jnp.exp(x) - 1
 test_func1_expr = sympy.exp(x) - 1
-test_func1_fournier = truncated_fft(test_func1, 5)
-
-def func1_approx(x):
-    return taylor_approx_jnp(test_func1, 0.0, 4)
+test_func1_fourier_expr = truncated_fft(test_func1, 3)[0]
+test_func1_fourier = sympy.lambdify(x, test_func1_fourier_expr)
 
 func1_approx_expr = taylor_approx(test_func1, 0.0, 4)
+func1_approx = sympy.lambdify(x, func1_approx_expr)
 
 
 def test_func2(x):
     return jnp.exp(2*x) - 2
 test_func2_expr = sympy.exp(2*x) - 2
-test_func2_fournier = truncated_fft(test_func2, 5)
-
-def func2_approx(x):
-    return taylor_approx_jnp(test_func2, 0.0, 4)
+test_func2_fourier_expr = truncated_fft(test_func2, 3)[0]
+test_func2_fourier = sympy.lambdify(x, test_func2_fourier_expr)
 
 func2_approx_expr = taylor_approx(test_func2, 0.0, 4)
+func2_approx = sympy.lambdify(x, func2_approx_expr)
+
+
 
 def test_func3(x):
     return jnp.exp(3*x) + 4*x
 test_func3_expr = sympy.exp(3*x) + 4*x
-test_func3_fournier = truncated_fft(test_func3, 5)
-
-def func3_approx(x):
-    return taylor_approx_jnp(test_func3, 0.0, 4)
+test_func3_fourier_expr = truncated_fft(test_func3, 3)[0]
+test_func3_fourier = sympy.lambdify(x, test_func3_fourier_expr)
 
 func3_approx_expr = taylor_approx(test_func3, 0.0, 4)
+func3_approx = sympy.lambdify(x, func3_approx_expr)
 
 def test_func4(x):
     return jnp.log(x)
 test_func4_expr = sympy.log(x)
-test_func4_fournier = truncated_fft(test_func4, 5)
-
-def func4_approx(x):
-    return taylor_approx_jnp(test_func4, 1.0, 4)
+test_func4_fourier_expr = truncated_fft(test_func4, 3)[0]
+test_func4_fourier = sympy.lambdify(x, test_func4_fourier_expr)
 
 func4_approx_expr = taylor_approx(test_func4, 1.0, 4)
+func4_approx = sympy.lambdify(x, func4_approx_expr)
 
 def test_func5(x):
     return jnp.log(x + 1)
 test_func5_expr = sympy.log(x + 1, e)
-test_func5_fournier = truncated_fft(test_func5, 5)
+test_func5_fourier_expr = truncated_fft(test_func5, 3)[0]
+test_func5_fourier = sympy.lambdify(x, test_func5_fourier_expr)
 
-def func5_approx(x):
-    return taylor_approx_jnp(test_func5, 0.0, 4)
 
 func5_approx_expr = taylor_approx(test_func5, 0.0, 4)
+func5_approx = sympy.lambdify(x, func5_approx_expr)
 
 def test_func6(x):
     return -jnp.log(x)
 test_func6_expr = -sympy.log(x, e)
-test_func6_fournier = truncated_fft(test_func6, 5)
+test_func6_fourier_expr = truncated_fft(test_func6, 3)[0]
+test_func6_fourier = sympy.lambdify(x, test_func6_fourier_expr)
 
-def func6_approx(x):
-    return taylor_approx_jnp(test_func6, 1.0, 4)
 
 func6_approx_expr = taylor_approx(test_func6, 1.0, 4)
+func6_approx = sympy.lambdify(x, func6_approx_expr)
 
 def test_func7(x):
     return jnp.log(x) + 3*x
 test_func7_expr = sympy.log(x, e) + 3*x
-test_func7_fournier = truncated_fft(test_func7, 5)
+test_func7_fourier_expr = truncated_fft(test_func7, 3)[0]
+test_func7_fourier = sympy.lambdify(x, test_func7_fourier_expr)
 
-def func7_approx(x):
-    return taylor_approx_jnp(test_func7, 1.0, 4)
 
 func7_approx_expr = taylor_approx(test_func7, 1.0, 4)
+func7_approx = sympy.lambdify(x, func7_approx_expr)
 
 '''
 def test_func8(x):
@@ -385,12 +384,87 @@ test_func8_expr = sympy.log(x, e) + sympy.exp(x)
 
 functions = {test_func1, test_func2, test_func3, test_func4, test_func5, test_func6, test_func7}
 function_expressions = {test_func1_expr, test_func2_expr, test_func3_expr, test_func4_expr, test_func5_expr, test_func6_expr, test_func7_expr}
-#fournier_approx = [test_func1_fournier, test_func2_fournier, test_func3_fournier, test_func4_fournier, test_func5_fournier, test_func6_fournier, test_func7_fournier]
+fourier_approx = {test_func1_fourier, test_func2_fourier, test_func3_fourier, test_func4_fourier, test_func5_fourier, test_func6_fourier, test_func7_fourier}
+fourier_approx_expr = {test_func1_fourier_expr, test_func2_fourier_expr, test_func3_fourier_expr, test_func4_fourier_expr, test_func5_fourier_expr, test_func6_fourier_expr, test_func7_fourier_expr}
 taylor_func = {func1_approx, func2_approx, func3_approx, func4_approx, func5_approx, func6_approx, func7_approx}
 taylor_func_expression = {func1_approx_expr, func2_approx_expr, func3_approx_expr, func4_approx_expr, func5_approx_expr, func6_approx_expr, func7_approx_expr}
 
 
-for func, func_expr, taylor, taylor_expr in zip(functions, function_expressions, taylor_func, taylor_func_expression):
+for func, func_expr, taylor, taylor_expr, fourier, fourier_expr in zip(functions, function_expressions, taylor_func, taylor_func_expression, fourier_approx, fourier_approx_expr):
     analyze_function(func, func_expr)
-    print("Taylor Approximation:")
+    print(f"Taylor Approximation for {func_expr}:")
     analyze_function(taylor, taylor_expr)
+    print(f"Fourier Approximation for {func_expr}:")
+    analyze_function(fourier, fourier_expr)
+
+
+#non-exponential functions(polynomials and trig mixed with polynomials)
+def func1(x):
+   return jnp.square(x) - (2*x) - 4
+func1_expr = x**2 - 2*x - 4
+func1_tay_approx_expr = taylor_approx(func1, 0.0, 4)
+func1_tay_approx = sympy.lambdify(x, func1_tay_approx_expr)
+func1_fourier_expr = truncated_fft(func1, 3)[0]
+func1_fourier = sympy.lambdify(x, func1_fourier_expr)
+
+def func2(x):
+   return jnp.power(x, 3) + 2 * jnp.power(x, 2) + (4*x) + 3
+func2_expr = x**3 + 2*x**2 + 4*x + 3
+func2_tay_approx_expr = taylor_approx(func2, 0.0, 4)
+func2_tay_approx = sympy.lambdify(x, func2_tay_approx_expr)
+func2_fourier_expr = truncated_fft(func2, 3)[0]
+func2_fourier = sympy.lambdify(x, func2_fourier_expr)
+
+def func3(x):
+   return jnp.cos(x)
+func3_expr = sympy.cos(x)
+func3_tay_approx_expr = taylor_approx(func3, 0.0, 4)
+func3_tay_approx = sympy.lambdify(x, func3_tay_approx_expr)
+func3_fourier_expr = truncated_fft(func3, 3)[0]
+func3_fourier = sympy.lambdify(x, func3_fourier_expr)
+
+
+def func4(x):
+    return jnp.power(x, 2) - jnp.cos(x)
+func4_expr = x**2 - sympy.cos(x)
+func4_tay_approx_expr = taylor_approx(func4, 0.0, 4)
+func4_tay_approx = sympy.lambdify(x, func3_tay_approx_expr)
+func4_fourier_expr = truncated_fft(func4, 3)[0]
+func4_fourier = sympy.lambdify(x, func4_fourier_expr)
+
+def func5(x):
+    return jnp.power(x,3) - jnp.sin(x)
+func5_expr = x**3 - sympy.sin(x)
+func5_tay_approx_expr = taylor_approx(func5, 0.0, 4)
+func5_tay_approx = sympy.lambdify(x, func5_tay_approx_expr)
+func5_fourier_expr = truncated_fft(func5, 3)[0]
+func5_fourier = sympy.lambdify(x, func5_fourier_expr)
+
+
+def func6(x):
+    return jnp.sin(x)
+func6_expr = sympy.sin(x)
+func6_tay_approx_expr = taylor_approx(func6, 0.0, 4)
+func6_tay_approx = sympy.lambdify(x, func6_tay_approx_expr)
+func6_fourier_expr = truncated_fft(func6, 3)[0]
+func6_fourier = sympy.lambdify(x, func6_fourier_expr)
+
+
+
+print("==========Section 2: Trig and polynomials==========")
+
+
+functions1 = {func1, func2, func3, func4, func5, func6}
+function_expressions1 = {func1_expr, func2_expr, func3_expr, func4_expr, func5_expr, func6_expr}
+fourier_approx1 = {func1_fourier, func2_fourier, func3_fourier, func4_fourier, func5_fourier, func6_fourier}
+fourier_approx_expr1= {func1_fourier_expr, func2_fourier_expr, func3_fourier_expr, func4_fourier_expr, func5_fourier_expr, func6_fourier_expr}
+taylor_func1 = {func1_tay_approx, func2_tay_approx, func3_tay_approx, func4_tay_approx, func5_tay_approx, func6_tay_approx}
+taylor_func_expression1 = {func1_tay_approx_expr, func2_tay_approx_expr, func3_tay_approx_expr, func4_tay_approx_expr, func5_tay_approx_expr, func6_tay_approx_expr}
+
+for func1, func_expr1, taylor1, taylor_expr1, fourier1, fourier_expr1 in zip(functions1, function_expressions1, taylor_func1, taylor_func_expression1, fourier_approx1, fourier_approx_expr1):
+    analyze_function(func1, func_expr1)
+    print(f"Taylor Approximation for {func_expr1}:")
+    analyze_function(taylor1, taylor_expr1)
+    print(f"Fourier Approximation for {func_expr1}:")
+    analyze_function(fourier1, fourier_expr1)
+
