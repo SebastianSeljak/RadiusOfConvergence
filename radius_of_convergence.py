@@ -29,7 +29,7 @@ def converges(func, solution, x0):
     Returns:
     bool: True if Newton's method converges to the solution, False otherwise.
     """
-    return np.round(float(newtons_method(func, x0)), 6) == np.round(float(solution), 6)
+    return jnp.round(float(newtons_method(func, x0)), 6) == jnp.round(float(solution), 6)
 
 def radius_of_convergence_bisection(func, solutions, max_x=100., max_iter=100):
     """
@@ -211,7 +211,7 @@ def generate_random_combined(trig=False, max_degree=4, phase_shift=False):
     
     return func, random_expr, period
 
-def analyze_function(func, expr):
+def analyze_function(func, expr, real_roots=None):
     """
     Analyzes a function by finding its roots and determining the radius of convergence.
 
@@ -224,11 +224,12 @@ def analyze_function(func, expr):
     """
     print(f"Generated function: {expr}")
     
-    # Find the real roots of the symbolic expression
-    roots = sympy.solve(expr, x)
-    real_roots = [r.evalf() for r in roots if r.is_real]
-    real_roots.sort()
-    print(f"Real roots: {real_roots}")
+    # If not already given, find the real roots of the symbolic expression
+    if real_roots is None:
+        roots = sympy.solve(expr, x)
+        real_roots = [r.evalf() for r in roots if r.is_real]
+        real_roots.sort()
+        print(f"Real roots: {real_roots}")
     
     # Apply radius of convergence analysis if there are real roots
     if real_roots:
@@ -255,14 +256,15 @@ def deriv_of_order(func, order):
         output = grad(output)
     return output
 
-def taylor_approx(func, point=0.0, order=3):
+def taylor_approx(func, point=0.0, order=3, plot=False):
     """
-    Compute the Taylor series approximation of a function at a given point.
+    Compute the Taylor series approximation of a function at a given point and optionally plot it.
 
     Parameters:
     func (function): The function to approximate.
     point (float): The point at which to approximate the function.
     order (int): The order of the Taylor series.
+    plot (bool): Whether to plot the original function and its Taylor approximation.
 
     Returns:
     sympy.Expr: The Taylor series approximation of the function.
@@ -273,9 +275,24 @@ def taylor_approx(func, point=0.0, order=3):
         derivative_at_point = deriv_of_order(func, i)(point)
         # Add the i-th term of the Taylor series to the approximation
         approx += derivative_at_point / sympy.factorial(i) * (x - point)**i
+
+    if plot:
+        x_vals = np.linspace(point - 5, point + 5, 400)
+        y_vals = np.array([func(x) for x in x_vals])
+        taylor_func = sympy.lambdify(x, approx, 'numpy')
+        taylor_vals = np.array([taylor_func(x) for x in x_vals])
+
+        plt.plot(x_vals, y_vals, label="Original function")
+        plt.plot(x_vals, taylor_vals, label=f"Taylor series (order={order})")
+        plt.legend()
+        plt.xlabel("x")
+        plt.ylabel("y")
+        plt.title("Original Function vs. Taylor Series Approximation")
+        plt.show()
+
     return approx
 
-def truncated_fft(function, n_terms, N=int(1e6), ds=1e-3, plot=False):
+def truncated_fft(function, order=3, point=0.0,  N=int(1e6), ds=1e-3, plot=False):
     """
     Truncates the FFT of the input data to the specified number of terms and
     returns a SymPy expression for the truncated Fourier series.
@@ -292,14 +309,22 @@ def truncated_fft(function, n_terms, N=int(1e6), ds=1e-3, plot=False):
         Reconstructed data
     """
     T = N * ds
-    x_np = np.linspace(-T/2, T/2, N, endpoint=False)  # NumPy array for FFT
+    x_np = np.linspace(point-T/2, point+T/2, N, endpoint=False)  # NumPy array for FFT
     x_sp = sympy.Symbol('x') 
     data = function(x_np)  # Evaluate the function using NumPy
+
+    # Check if all values in data are real
+    if np.any(np.isnan(data)):
+        nan_indices = np.where(np.isnan(data))[0]
+        nan_points = x_np[nan_indices]
+        raise ValueError(f"Function evaluation returned NaN for points in x_np: {nan_points}. "
+                         f"Largest value: {np.max(nan_points)}, Smallest value: {np.min(nan_points)}")
+
     fft_result = np.fft.fft(data)
     truncated_fft = np.zeros_like(fft_result, dtype=complex)
 
-    truncated_fft[:n_terms] = fft_result[:n_terms]
-    truncated_fft[-n_terms:] = fft_result[-n_terms:]
+    truncated_fft[:order] = fft_result[:order]
+    truncated_fft[-order:] = fft_result[-order:]
 
     reconstructed_data = np.fft.ifft(truncated_fft)
 
@@ -307,7 +332,7 @@ def truncated_fft(function, n_terms, N=int(1e6), ds=1e-3, plot=False):
     a0 = 2 * fft_result[0].real / N
     fourier_series_expr = a0 / 2
 
-    for k in range(1, n_terms + 1):
+    for k in range(1, order + 1):
         ak_complex = 2 * fft_result[k] / N
         ak = ak_complex.real
         bk = -ak_complex.imag
@@ -315,7 +340,7 @@ def truncated_fft(function, n_terms, N=int(1e6), ds=1e-3, plot=False):
 
     if plot:
         plt.plot(x_np, data, label="Original data")
-        plt.plot(x_np, reconstructed_data.real, label=f"Reconstructed data (n={n_terms})")
+        plt.plot(x_np, reconstructed_data.real, label=f"Reconstructed data (n={order})")
         plt.legend()
         plt.xlabel("x")
         plt.ylabel("y")
